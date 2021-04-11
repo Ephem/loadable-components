@@ -18,7 +18,11 @@ class LoadablePlugin {
     this.compiler = null
   }
 
-  handleEmit = compilation => {
+  handleEmit = (compilation) => {
+    if (!this.opts.writeToDisk && !this.opts.outputAsset) {
+      return null
+    }
+
     const stats = compilation.getStats().toJson({
       all: false,
       assets: true,
@@ -34,7 +38,7 @@ class LoadablePlugin {
     stats.generator = 'loadable-components'
 
     // we don't need all chunk information, only a type
-    stats.chunks = stats.chunks.map(chunk => ({
+    stats.chunks = stats.chunks.map((chunk) => ({
       ...chunk,
       modules: [], // in case modules array is big
       origins: [], // in case origins array is big
@@ -64,7 +68,7 @@ class LoadablePlugin {
    * Write Assets Manifest file
    * @method writeAssetsFile
    */
-  writeAssetsFile = manifest => {
+  writeAssetsFile = (manifest) => {
     const outputFolder =
       this.opts.writeToDisk.filename || this.compiler.options.output.path
 
@@ -98,7 +102,7 @@ class LoadablePlugin {
     if (this.opts.outputAsset || this.opts.writeToDisk) {
       if (version === 4) {
         // webpack 4
-        compiler.hooks.emit.tap(name, compilation => {
+        compiler.hooks.emit.tap(name, (compilation) => {
           const asset = this.handleEmit(compilation)
           if (asset) {
             compilation.assets[this.opts.filename] = asset
@@ -106,12 +110,11 @@ class LoadablePlugin {
         })
       } else {
         // webpack 5
-        compiler.hooks.make.tap(name, compilation => {
+        compiler.hooks.make.tap(name, (compilation) => {
           compilation.hooks.processAssets.tap(
             {
               name,
-              stage:
-                compiler.webpack.Compilation.PROCESS_ASSETS_STAGE_REPORT,
+              stage: compiler.webpack.Compilation.PROCESS_ASSETS_STAGE_REPORT,
             },
             () => {
               const asset = this.handleEmit(compilation)
