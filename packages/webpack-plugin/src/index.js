@@ -19,6 +19,10 @@ class LoadablePlugin {
   }
 
   handleEmit = compilation => {
+    if (!this.opts.writeToDisk && !this.opts.outputAsset) {
+      return null
+    }
+
     const stats = compilation.getStats().toJson({
       all: false,
       assets: true,
